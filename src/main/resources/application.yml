@@ -17,13 +17,12 @@ spring:
           uri: http://localhost:8083
           predicates:
             - Path=/orderservice
-      # Aggregation configuration
-      filters:
-        - name: RequestRateLimiter
-          args:
-            redis-rate-limiter:
-              replenishRate: 10
-              burstCapacity: 20
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
 logging:
   level:
     root: INFO

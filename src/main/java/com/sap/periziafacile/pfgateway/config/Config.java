@@ -1,5 +1,8 @@
 package com.sap.periziafacile.pfgateway.config;
 
+import java.security.Provider;
+import java.util.Optional;
+
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
@@ -9,6 +12,7 @@ import org.springframework.web.client.RestTemplate;
 import com.sap.periziafacile.pfgateway.filters.AggregationFilter;
 import com.sap.periziafacile.pfgateway.filters.CustomerAggregator;
 import com.sap.periziafacile.pfgateway.filters.OrderAggregator;
+import com.sap.periziafacile.pfgateway.helpers.ServiceContainer;
 
 @Configuration
 public class Config {
@@ -20,29 +24,44 @@ public class Config {
                         OrderAggregator orderAggregator,
                         CustomerAggregator customerAggregator) {
 
-                UriConfiguration customerservice = new UriConfiguration("customerservice", "http://localhost:8082");
-                UriConfiguration orderservice = new UriConfiguration("orderservice", "http://localhost:8083");
+                Optional<String> customerservice = ServiceContainer.getService("customerservice");
+                Optional<String> orderservice = ServiceContainer.getService("orderservice");
+                Optional<String> authservice = ServiceContainer.getService("authservice");
 
                 return builder
                                 .routes()
-                                .route("composite", r -> r.path("/composite/**")
+                                .route("composite", p -> p.path("/composite/**")
                                                 .filters(f -> f.filter(aggregationFilter))
                                                 .uri("http://localhost:8080"))
                                 .route(p -> p
                                                 .path("/customers")
-                                                .uri(customerservice.getUrl()))
+                                                .uri(customerservice.get()))
                                 .route(p -> p
                                                 .path("/orders")
-                                                .uri(orderservice.getUrl()))
+                                                .uri(orderservice.get()))
                                 .route(p -> p
                                                 .path("/customers/**")
                                                 .filters(f -> f.filter(customerAggregator))
-                                                .uri(customerservice.getUrl()))
+                                                .uri("http://localhost:8080"))
                                 .route(p -> p
                                                 .path("/orders/**")
                                                 .filters(f -> f.filter(orderAggregator))
-                                                .uri(orderservice.getUrl()))
-
+                                                .uri("http://localhost:8080"))
+                                .route(p -> p
+                                                .path("/users")
+                                                .uri(authservice.get()))
+                                .route(p -> p
+                                                .path("/users/**")
+                                                .uri(authservice.get()))
+                                .route(p -> p
+                                                .path("/auth/login")
+                                                .uri(authservice.get()))
+                                .route(p -> p
+                                                .path("/auth/register")
+                                                .uri(authservice.get()))
+                                .route(p -> p
+                                                .path("/auth/test")
+                                                .uri(authservice.get()))
                                 /*
                                  * .route(p -> p
                                  * .host("*.circuitbreaker.com")

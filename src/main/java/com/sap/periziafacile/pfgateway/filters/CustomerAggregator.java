@@ -41,6 +41,7 @@ public class CustomerAggregator implements GatewayFilter {
                 .flatMap(customer -> {
                     JSONObject jsonresponse = new JSONObject();
                     JSONObject jsoncustomer = new JSONObject(customer);
+                    jsonresponse.put("customer", jsoncustomer);
 
                     CompletableFuture<String> orders = getOrders(jsoncustomer.get("id").toString());
                     String orders_ = orders.join();

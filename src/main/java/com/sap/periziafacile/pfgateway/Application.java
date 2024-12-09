@@ -11,13 +11,17 @@ import com.sap.periziafacile.pfgateway.helpers.ServiceContainer;
 public class Application {
 
 	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
 
-		if(!ServiceContainer.registerService("customerservice", "http://localhost:8082"))
+		if (!ServiceContainer.registerService("authservice", "http://localhost:8081"))
+			System.out.println("Error registering authservice");
+
+		if (!ServiceContainer.registerService("customerservice", "http://localhost:8082"))
 			System.out.println("Error registering customerservice");
 
-		if(!ServiceContainer.registerService("orderservice", "http://localhost:8083"))
+		if (!ServiceContainer.registerService("orderservice", "http://localhost:8083"))
 			System.out.println("Error registering orderservice");
+
+		SpringApplication.run(Application.class, args);
 
 	}
 
