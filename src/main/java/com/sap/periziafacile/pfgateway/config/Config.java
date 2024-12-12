@@ -1,17 +1,18 @@
 package com.sap.periziafacile.pfgateway.config;
 
-import java.security.Provider;
 import java.util.Optional;
 
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.client.RestTemplate;
 
 import com.sap.periziafacile.pfgateway.filters.AggregationFilter;
 import com.sap.periziafacile.pfgateway.filters.CustomerAggregator;
 import com.sap.periziafacile.pfgateway.filters.OrderAggregator;
+import com.sap.periziafacile.pfgateway.filters.OrderPublishFilter;
 import com.sap.periziafacile.pfgateway.helpers.ServiceContainer;
 
 @Configuration
@@ -22,6 +23,7 @@ public class Config {
                         UriConfiguration uriConfiguration,
                         AggregationFilter aggregationFilter,
                         OrderAggregator orderAggregator,
+                        OrderPublishFilter orderPublishFilter,
                         CustomerAggregator customerAggregator) {
 
                 Optional<String> customerservice = ServiceContainer.getService("customerservice");
@@ -30,23 +32,42 @@ public class Config {
 
                 return builder
                                 .routes()
-                                .route("composite", p -> p.path("/composite/**")
+                                /* .route("composite", p -> p.path("/composite/**")
                                                 .filters(f -> f.filter(aggregationFilter))
-                                                .uri("http://localhost:8080"))
-                                .route(p -> p
-                                                .path("/customers")
-                                                .uri(customerservice.get()))
+                                                .uri("http://localhost:8080")) */
                                 .route(p -> p
                                                 .path("/orders")
+                                                .and()
+                                                .method(HttpMethod.GET)
                                                 .uri(orderservice.get()))
                                 .route(p -> p
-                                                .path("/customers/**")
-                                                .filters(f -> f.filter(customerAggregator))
+                                                .path("/orders/**")
+                                                .and()
+                                                .method(HttpMethod.GET)
+                                                .filters(f -> f.filter(orderAggregator))
+                                                .uri("http://localhost:8080"))
+                                .route(p -> p
+                                                .method(HttpMethod.POST)
+                                                .or()
+                                                .path("/orders")
+                                                .filters(f -> f.filter(orderPublishFilter))
                                                 .uri("http://localhost:8080"))
                                 .route(p -> p
                                                 .path("/orders/**")
-                                                .filters(f -> f.filter(orderAggregator))
+                                                .and()
+                                                .method(HttpMethod.PUT)
                                                 .uri("http://localhost:8080"))
+                                .route(p -> p
+                                                .path("/customers/**")
+                                                .and()
+                                                .method(HttpMethod.GET)
+                                                .filters(f -> f.filter(customerAggregator))
+                                                .uri("http://localhost:8080"))
+                                .route(p -> p
+                                                .path("/customers")
+                                                .and()
+                                                .method(HttpMethod.GET)
+                                                .uri(customerservice.get()))
                                 .route(p -> p
                                                 .path("/users")
                                                 .uri(authservice.get()))

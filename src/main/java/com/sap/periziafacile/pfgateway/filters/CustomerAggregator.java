@@ -78,7 +78,7 @@ public class CustomerAggregator implements GatewayFilter {
         Optional<String> uri = ServiceContainer.getService("orderservice");
         if (uri.isPresent())
             return CompletableFuture
-                    .supplyAsync(() -> restTemplate.getForObject(uri.get() + String.format("/orders/forcustomer/%s", customerid),
+                    .supplyAsync(() -> restTemplate.getForObject(uri.get() + "/orders/forcustomer/%s".formatted(customerid),
                             String.class));
 
         return CompletableFuture
